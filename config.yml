@@ -1,0 +1,15 @@
+# Needs to look somewhat like this otherwise it will panic:
+# server: ldap.example.com
+# tls: false
+# basedn: DC=base,DC=example,DC=com
+# bind:
+#   user: LDAP_BIND_USER_DN
+#   password: LDAP_BIND_USER_PASSWORD
+# groups:
+#   - CN=GROUP1,OU=Groups,DC=base,DC=example,DC=com
+#   - CN=GROUP2,OU=Groups,DC=base,DC=example,DC=com
+# mappings:
+#   admin: CN=Role,OU=Roles,DC=base,DC=example,DC=com
+# user_attribute: sAMAccountName
+# attributes: [sAMAccountName, displayName, memberOf]
+# timeout: 10
