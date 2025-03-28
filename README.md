@@ -27,7 +27,8 @@ groups:
   - CN=GROUP1,OU=Groups,DC=base,DC=example,DC=com
   - CN=GROUP2,OU=Groups,DC=base,DC=example,DC=com
 mappings:
-  admin: CN=Role,OU=Roles,DC=base,DC=example,DC=com
+  admin: 
+    - CN=Role,OU=Roles,DC=base,DC=example,DC=com
 user_attribute: sAMAccountName
 attributes: [sAMAccountName, displayName, memberOf]
 timeout: 10
