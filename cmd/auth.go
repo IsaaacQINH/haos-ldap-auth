@@ -8,6 +8,7 @@ import (
 )
 
 func Auth() {
+
 	config := gateway.Config{}
 	searchGroups := config.Groups[:0]
 	userCreds, err := gateway.GetEnv()
@@ -18,6 +19,7 @@ func Auth() {
 	}
 
 	config.GetConf()
+
 	adConn, err := gateway.ConnectAndBind(config)
 	if err != nil {
 		panic(err)

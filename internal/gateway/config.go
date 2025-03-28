@@ -14,25 +14,33 @@ type BindUser struct {
 }
 
 type Config struct {
-	Server        string            `yaml:"server"`
-	TLS           bool              `yaml:"tls"`
-	BaseDN        string            `yaml:"basedn"`
-	Bind          BindUser          `yaml:"bind"`
-	Groups        []string          `yaml:"groups"`
-	Mappings      map[string]string `yaml:"mappings"`
-	UserAttribute string            `yaml:"user_attribute"`
-	Attributes    []string          `yaml:"attributes"`
-	Timeout       int               `yaml:"timeout"`
+	Server        string              `yaml:"server"`
+	TLS           bool                `yaml:"tls"`
+	BaseDN        string              `yaml:"basedn"`
+	Bind          BindUser            `yaml:"bind"`
+	Groups        []string            `yaml:"groups"`
+	Mappings      map[string][]string `yaml:"mappings"`
+	UserAttribute string              `yaml:"user_attribute"`
+	Attributes    []string            `yaml:"attributes"`
+	Timeout       int                 `yaml:"timeout"`
 }
 
 func (c *Config) GetConf() *Config {
+	a := os.Args[1:]
 	ex, err := os.Executable()
 
 	if err != nil {
 		log.Printf("Error getting executable path: %v", err)
 	}
 
-	yml, err := os.ReadFile(path.Join(path.Dir(ex), "config.yml"))
+	cfgPath := ""
+	if len(a) > 0 {
+		cfgPath = a[0]
+	} else {
+		cfgPath = path.Join(path.Dir(ex), "config.yml")
+	}
+
+	yml, err := os.ReadFile(cfgPath)
 
 	if err != nil {
 		log.Printf("Error reading config file: %v", err)

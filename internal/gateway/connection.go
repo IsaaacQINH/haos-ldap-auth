@@ -108,10 +108,12 @@ func IsAdmin(entry *ldap.Entry, cfg Config) string {
 	isA := "system-users"
 
 	entryGroups := entry.GetAttributeValues("memberOf")
-	cts := slices.Contains(entryGroups, cfg.Mappings["admin"])
 
-	if cts {
-		isA = "system-admin"
+	for _, group := range cfg.Mappings["admin"] {
+		if slices.Contains(entryGroups, group) {
+			isA = "system-admin"
+			break
+		}
 	}
 
 	return isA
