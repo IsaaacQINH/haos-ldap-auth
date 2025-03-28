@@ -51,6 +51,7 @@ homeassistant:
         - type: command_line
           name: 'LDAP Auth'
           command: '/path/to/haos-ldap-auth'
+          args: ["/path/to/config.yml"]
           meta: true
         - type: homeassistant
 ```
