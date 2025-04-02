@@ -7,6 +7,12 @@ import (
 	"github.com/go-ldap/ldap/v3"
 )
 
+type User struct {
+	Login    string
+	Username string
+	Group    string
+}
+
 func ConnectAndBind(cfg Config) (*ldap.Conn, error) {
 	var prot string
 	var port int
@@ -59,39 +65,46 @@ func GetGroups(conn *ldap.Conn, cfg Config) ([]*ldap.Entry, error) {
 	return groups, nil
 }
 
-func SearchUser(conn *ldap.Conn, cfg Config, groups []string, username string) (*ldap.Entry, error) {
-	userFilter := fmt.Sprintf("(%s=%s)", cfg.UserAttribute, username)
-	groupFilter := "(|"
+func SearchUser(conn *ldap.Conn, cfg Config, username string) (*User, error) {
+	user := User{}
 
-	for _, grp := range groups {
-		groupFilter += fmt.Sprintf("(memberOf=%s)", grp)
+	for _, group := range cfg.Groups {
+		userFilter := fmt.Sprintf("(%s=%s)", cfg.UserAttribute, username)
+		groupFilter := fmt.Sprintf("(memberOf:1.2.840.113556.1.4.1941:=%s)", group)
+
+		searchFilter := fmt.Sprintf("(&%s%s)", userFilter, groupFilter)
+
+		searchRequest := ldap.NewSearchRequest(
+			cfg.BaseDN,
+			ldap.ScopeWholeSubtree,
+			ldap.NeverDerefAliases,
+			0,
+			cfg.Timeout,
+			false,
+			searchFilter,
+			cfg.Attributes,
+			nil,
+		)
+
+		srUser, err := conn.Search(searchRequest)
+		if err != nil {
+			return nil, err
+		}
+
+		if len(srUser.Entries) == 0 {
+			continue
+		}
+
+		user.Login = srUser.Entries[0].DN
+		user.Username = srUser.Entries[0].GetAttributeValue("displayName")
+		user.Group = IsAdmin(group, cfg)
+
+		if (len(srUser.Entries)) > 1 {
+			return nil, fmt.Errorf("too many entries returned")
+		}
 	}
 
-	groupFilter += ")"
-	searchFilter := fmt.Sprintf("(&%s%s)", userFilter, groupFilter)
-
-	searchRequest := ldap.NewSearchRequest(
-		cfg.BaseDN,
-		ldap.ScopeWholeSubtree,
-		ldap.NeverDerefAliases,
-		0,
-		cfg.Timeout,
-		false,
-		searchFilter,
-		cfg.Attributes,
-		nil,
-	)
-
-	sr, err := conn.Search(searchRequest)
-	if err != nil {
-		return nil, err
-	}
-
-	if (len(sr.Entries)) > 1 {
-		return nil, fmt.Errorf("too many entries returned")
-	}
-
-	return sr.Entries[0], nil
+	return &user, nil
 }
 
 func TryBind(conn *ldap.Conn, cfg Config, username string, password string) error {
@@ -104,16 +117,11 @@ func TryBind(conn *ldap.Conn, cfg Config, username string, password string) erro
 	return nil
 }
 
-func IsAdmin(entry *ldap.Entry, cfg Config) string {
+func IsAdmin(ug string, cfg Config) string {
 	isA := "system-users"
 
-	entryGroups := entry.GetAttributeValues("memberOf")
-
-	for _, group := range cfg.Mappings["admin"] {
-		if slices.Contains(entryGroups, group) {
-			isA = "system-admin"
-			break
-		}
+	if slices.Contains(cfg.Mappings["admin"], ug) {
+		isA = "system-admin"
 	}
 
 	return isA

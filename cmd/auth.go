@@ -8,9 +8,7 @@ import (
 )
 
 func Auth() {
-
 	config := gateway.Config{}
-	searchGroups := config.Groups[:0]
 	userCreds, err := gateway.GetEnv()
 	authString := ""
 
@@ -26,24 +24,15 @@ func Auth() {
 	}
 	defer adConn.Close()
 
-	groups, err := gateway.GetGroups(adConn, config)
+	res, err := gateway.SearchUser(adConn, config, userCreds.Username)
 	if err != nil {
 		panic(err)
 	}
 
-	for _, group := range groups {
-		searchGroups = append(searchGroups, group.DN)
-	}
+	authString = fmt.Sprintf("name = %s\n", res.Username)
+	authString += fmt.Sprintf("group = %s\n", res.Group)
 
-	res, err := gateway.SearchUser(adConn, config, searchGroups, userCreds.Username)
-	if err != nil {
-		panic(err)
-	}
-
-	authString = fmt.Sprintf("name = %s\n", res.GetAttributeValue("displayName"))
-	authString += fmt.Sprintf("group = %s\n", gateway.IsAdmin(res, config))
-
-	err = gateway.TryBind(adConn, config, res.DN, userCreds.Password)
+	err = gateway.TryBind(adConn, config, res.Login, userCreds.Password)
 	if err != nil {
 		os.Exit(1)
 	}
