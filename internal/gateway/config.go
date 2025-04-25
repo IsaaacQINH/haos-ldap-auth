@@ -13,6 +13,11 @@ type BindUser struct {
 	Password string `yaml:"password"`
 }
 
+type Verbose struct {
+	Enabled bool   `yaml:"enabled"`
+	File    string `yaml:"file"`
+}
+
 type Config struct {
 	Server        string              `yaml:"server"`
 	TLS           bool                `yaml:"tls"`
@@ -24,7 +29,7 @@ type Config struct {
 	UserAttribute string              `yaml:"user_attribute"`
 	Attributes    []string            `yaml:"attributes"`
 	Timeout       int                 `yaml:"timeout"`
-	Verbose       bool                `yaml:"verbose"`
+	Verbose       Verbose             `yaml:"verbose"`
 }
 
 func (c *Config) GetConf() *Config {
@@ -52,6 +57,10 @@ func (c *Config) GetConf() *Config {
 
 	if err != nil {
 		log.Printf("Error parsing config file: %v", err)
+	}
+
+	if c.Verbose.File == "" {
+		c.Verbose.File = path.Join(path.Dir(ex), "auth.log")
 	}
 
 	return c

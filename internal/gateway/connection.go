@@ -6,6 +6,7 @@ import (
 	"slices"
 
 	"github.com/go-ldap/ldap/v3"
+	"github.com/isaaacqinh/haos-ldap-auth/internal/logger"
 )
 
 type User struct {
@@ -36,8 +37,8 @@ func ConnectAndBind(cfg Config) (*ldap.Conn, error) {
 		return nil, err
 	}
 
-	if cfg.Verbose {
-		fmt.Printf("# Connected to %s://%s:%d\n", prot, cfg.Server, port)
+	if cfg.Verbose.Enabled {
+		logger.WriteLog(cfg.Verbose.File, fmt.Sprintf("Connected to %s://%s:%d", prot, cfg.Server, port))
 	}
 
 	return c, nil
@@ -67,8 +68,8 @@ func GetGroups(conn *ldap.Conn, cfg Config) ([]*ldap.Entry, error) {
 		groups = append(groups, sr.Entries...)
 	}
 
-	if cfg.Verbose {
-		fmt.Printf("# Found %d groups\n", len(groups))
+	if cfg.Verbose.Enabled {
+		logger.WriteLog(cfg.Verbose.File, fmt.Sprintf("Found %d groups", len(groups)))
 	}
 
 	return groups, nil
@@ -117,8 +118,8 @@ func SearchUser(conn *ldap.Conn, cfg Config, username string) (*User, error) {
 		}
 	}
 
-	if cfg.Verbose {
-		fmt.Printf("# Found user %s in group %s\n", user.Username, user.Group)
+	if cfg.Verbose.Enabled {
+		logger.WriteLog(cfg.Verbose.File, fmt.Sprintf("Found user %s in group %s", user.Username, user.Group))
 	}
 
 	return &user, nil
@@ -127,15 +128,15 @@ func SearchUser(conn *ldap.Conn, cfg Config, username string) (*User, error) {
 func TryBind(conn *ldap.Conn, cfg Config, username string, password string) error {
 	err := conn.Bind(username, password)
 	if err != nil {
-		if cfg.Verbose {
-			fmt.Printf("# User %s failed to authenticate\n", username)
+		if cfg.Verbose.Enabled {
+			logger.WriteLog(cfg.Verbose.File, fmt.Sprintf("User %s failed to authenticate", username))
 		}
 
 		return err
 	}
 
-	if cfg.Verbose {
-		fmt.Printf("# User %s authenticated\n", username)
+	if cfg.Verbose.Enabled {
+		logger.WriteLog(cfg.Verbose.File, fmt.Sprintf("User %s authenticated successfully", username))
 	}
 
 	conn.Unbind()
@@ -149,8 +150,8 @@ func IsAdmin(ug string, cfg Config) string {
 		isA = "system-admin"
 	}
 
-	if cfg.Verbose {
-		fmt.Printf("# User group %s is mapped to %s\n", ug, isA)
+	if cfg.Verbose.Enabled {
+		logger.WriteLog(cfg.Verbose.File, fmt.Sprintf("User group %s is mapped to %s", ug, isA))
 	}
 
 	return isA

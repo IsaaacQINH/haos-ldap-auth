@@ -31,3 +31,5 @@ config.yml.dev
 config.yml.prod
 build/
 build.bat
+
+*.log
