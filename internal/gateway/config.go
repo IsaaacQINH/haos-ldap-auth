@@ -24,6 +24,7 @@ type Config struct {
 	UserAttribute string              `yaml:"user_attribute"`
 	Attributes    []string            `yaml:"attributes"`
 	Timeout       int                 `yaml:"timeout"`
+	Verbose       bool                `yaml:"verbose"`
 }
 
 func (c *Config) GetConf() *Config {

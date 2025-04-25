@@ -36,6 +36,10 @@ func ConnectAndBind(cfg Config) (*ldap.Conn, error) {
 		return nil, err
 	}
 
+	if cfg.Verbose {
+		fmt.Printf("# Connected to %s://%s:%d\n", prot, cfg.Server, port)
+	}
+
 	return c, nil
 }
 
@@ -61,6 +65,10 @@ func GetGroups(conn *ldap.Conn, cfg Config) ([]*ldap.Entry, error) {
 		}
 
 		groups = append(groups, sr.Entries...)
+	}
+
+	if cfg.Verbose {
+		fmt.Printf("# Found %d groups\n", len(groups))
 	}
 
 	return groups, nil
@@ -96,6 +104,10 @@ func SearchUser(conn *ldap.Conn, cfg Config, username string) (*User, error) {
 			continue
 		}
 
+		if user.Login != "" {
+			continue
+		}
+
 		user.Login = srUser.Entries[0].DN
 		user.Username = srUser.Entries[0].GetAttributeValue("displayName")
 		user.Group = IsAdmin(group, cfg)
@@ -105,13 +117,25 @@ func SearchUser(conn *ldap.Conn, cfg Config, username string) (*User, error) {
 		}
 	}
 
+	if cfg.Verbose {
+		fmt.Printf("# Found user %s in group %s\n", user.Username, user.Group)
+	}
+
 	return &user, nil
 }
 
 func TryBind(conn *ldap.Conn, cfg Config, username string, password string) error {
 	err := conn.Bind(username, password)
 	if err != nil {
+		if cfg.Verbose {
+			fmt.Printf("# User %s failed to authenticate\n", username)
+		}
+
 		return err
+	}
+
+	if cfg.Verbose {
+		fmt.Printf("# User %s authenticated\n", username)
 	}
 
 	conn.Unbind()
@@ -123,6 +147,10 @@ func IsAdmin(ug string, cfg Config) string {
 
 	if slices.Contains(cfg.Mappings["admin"], ug) {
 		isA = "system-admin"
+	}
+
+	if cfg.Verbose {
+		fmt.Printf("# User group %s is mapped to %s\n", ug, isA)
 	}
 
 	return isA
