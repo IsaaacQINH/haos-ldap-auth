@@ -1,6 +1,7 @@
 package gateway
 
 import (
+	"crypto/tls"
 	"fmt"
 	"slices"
 
@@ -25,7 +26,7 @@ func ConnectAndBind(cfg Config) (*ldap.Conn, error) {
 		port = 389
 	}
 
-	c, err := ldap.DialURL(fmt.Sprintf("%s://%s:%d", prot, cfg.Server, port))
+	c, err := ldap.DialURL(fmt.Sprintf("%s://%s:%d", prot, cfg.Server, port), ldap.DialWithTLSConfig(&tls.Config{InsecureSkipVerify: !cfg.Verify}))
 	if err != nil {
 		return nil, err
 	}

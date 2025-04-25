@@ -16,6 +16,7 @@ type BindUser struct {
 type Config struct {
 	Server        string              `yaml:"server"`
 	TLS           bool                `yaml:"tls"`
+	Verify        bool                `yaml:"verify"`
 	BaseDN        string              `yaml:"basedn"`
 	Bind          BindUser            `yaml:"bind"`
 	Groups        []string            `yaml:"groups"`

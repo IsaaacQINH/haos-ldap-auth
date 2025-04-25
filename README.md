@@ -18,7 +18,8 @@ cd haos-ldap-auth
 2. **Edit your config**
 ```yml
 server: ldap.example.com
-tls: false
+tls: true
+verify: false
 basedn: DC=base,DC=example,DC=com
 bind:
   user: LDAP_BIND_USER_DN
